@@ -1,0 +1,48 @@
+----------------------------------------------------------------------------------------------
+
+/* --- TOTAL ACTUAL MRR ---
+Calculates the aggregate Monthly Recurring Revenue (MRR) across all active subscriptions.
+*/
+
+Total Actual MRR = SUM(SubscriptionRevenue[Actual MRR]) 
+
+----------------------------------------------------------------------------------------------
+
+/* --- ANNUAL RECURRING REVENUE (ARR) ---
+Calculates the projected annual value of all active subscription contracts by normalizing the current Monthly Recurring Revenue (MRR) over a 12-month period. This high-level valuation metric is critical for forecasting long-term revenue stability and determining the overall growth trajectory of the subscription business model.
+*/
+
+Anual Recuring Revenue = SubscriptionRevenue[Total Actual MRR] * 12 
+
+---------------------------------------------------------------------------------------------
+
+/* --- AVERAGE ACTUAL MRR PER CUSTOMER ---
+Calculates the mean monthly recurring revenue (MRR) generated per unique customer. Logic: Divides the total active MRR by the distinct count of Customer IDs. 
+*/
+
+Average Actual MRR per Customer = 
+    DIVIDE(
+        [Total Actual MRR],
+        DISTINCTCOUNT(Customer[Customer ID]),
+        0)
+
+----------------------------------------------------------------------------------------------
+
+/* --- ACTUAL MRR PRIOR MONTH ---
+Calculates the Total Monthly Recurring Revenue (MRR) for the previous calendar month. Logic: Shifts the current date context back by one month using the DATEADD function. This time-intelligence metric is fundamental for Month-over-Month (MoM) growth analysis and identifying revenue retention trends.
+
+Actual MRR Prior Month = CALCULATE([Total Actual MRR], DATEADD('Date'[Date], -1, MONTH))
+
+---------------------------------------------------------------------------------------------
+
+/* --- TOTAL ACTUAL MRR GROWTH % ---
+Calculates the Month-over-Month (MoM) percentage change in Monthly Recurring Revenue. Logic: Determines the variance between the current month's MRR and the prior month's MRR, then divides by the prior month to normalize the growth rate. This is a primary growth metric for SaaS businesses to track expansion, contraction, and overall momentum.
+*/
+
+Total Actual MRR Growth % = 
+ DIVIDE(
+    SubscriptionRevenue[Total Actual MRR] - SubscriptionRevenue[Actual MRR Prior Month],
+    SubscriptionRevenue[Actual MRR Prior Month],
+    0)
+
+----------------------------------------------------------------------------------------------
