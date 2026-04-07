@@ -1,0 +1,87 @@
+-----------------------------------------------------------------------------------------------
+
+/* --- ACTIVE TICKET RATIO ---
+Calculates the proportion of unresolved support requests relative to the total ticket volume. Logic: Filters the SupportTickets table for "Open" or "In Progress" statuses and divides by the distinct count of all tickets. This operational metric is a key indicator of support backlog health and team responsiveness.
+*/
+
+Active Ticket Ratio = 
+VAR activeTickets = COUNTROWS(FILTER(SupportTickets, SupportTickets[Status] = "In Progress" || SupportTickets[Status] = "Open"))
+VAR totalTickets = DISTINCTCOUNT(SupportTickets[Ticket ID])
+RETURN
+    DIVIDE(activeTickets, totalTickets, 0) 
+
+-----------------------------------------------------------------------------------------------
+
+/* --- REVENUE PER SUPPORT TICKET ---
+Calculates the average revenue generated relative to the volume of support requests. Logic: Aggregates total project revenue and divides by the distinct count of all support tickets, regardless of status. This cross-functional metric helps evaluate the "support cost" of revenue and identifies the relationship between account value and service demand.
+*/
+
+Revenue Per Support Ticket = 
+VAR totalProjectRevenue = SUM(ProjectSales[Revenue])
+VAR totalTicketsAnyStatus = CALCULATE(DISTINCTCOUNT(SupportTickets[Ticket ID]), ALL(SupportTickets[Status]))
+RETURN
+    DIVIDE(totalProjectRevenue, totalTicketsAnyStatus,0) 
+
+-------------------------------------------------------------------------------------------
+
+/* --- AVERAGE ACTIVE TICKETS PER CUSTOMER ---
+Calculates the mean number of unresolved support requests per active customer account. Logic: Filters the SupportTickets table for "Open" and "In Progress" statuses to count current workload, then divides by the distinct count of customers currently holding those tickets. This service-level metric identifies account-level friction and support resource allocation needs.
+*/
+
+Average Active Tickets per Customer = 
+VAR activeTicketsCnt = COUNTROWS(FILTER(SupportTickets, SupportTickets[Status] IN {"Open", "In Progress"}))
+VAR customersWithActiveTicketsCnt = CALCULATE(DISTINCTCOUNT(SupportTickets[Customer ID]), SupportTickets[Status] IN {"Open", "In Progress"})
+
+RETURN
+    DIVIDE(activeTicketsCnt, customersWithActiveTicketsCnt, 0)
+
+-----------------------------------------------------------------------------------------------
+
+/* --- AVERAGE AGE OF OPEN TICKETS ---
+Calculates the mean duration (in days) that unresolved support requests have remained active in the system. Logic: Filters the SupportTickets table for "Open" or "In Progress" statuses and computes the average time difference between the ticket creation date and the most recent date in the context. This metric is vital for identifying bottlenecks and managing customer expectations regarding resolution speed.
+*/
+
+Average Age of Open Tickets = 
+    VAR activeTicketsTable = FILTER(SupportTickets, SupportTickets[Status] IN {"Open", "In Progress"})
+RETURN
+    AVERAGEX(activeTicketsTable, DATEDIFF([Created Date], MAX(SupportTickets[Created Date]), DAY))
+
+-----------------------------------------------------------------------------------------------
+
+/* --- HIGH PRIORITY TICKETS NOT RESOLVED PROMPTLY ---
+Identifies critical support requests that have exceeded the standard 7-day resolution window. Logic: Filters for "High" priority tickets with an unresolved status ("Open" or "In Progress") where the age of the ticket is greater than 7 days from the current date. This metric is a vital alert for management to mitigate high-risk customer friction.
+*/
+
+High Priority Tickets Not Resolved Promptly = CALCULATE(DISTINCTCOUNT(SupportTickets[Ticket ID]), FILTER(SupportTickets, [Priority] = "High" && ([Status] = "In Progress" || [Status] = "Open") && DATEDIFF([Created Date],TODAY(),DAY) > 7))
+
+-----------------------------------------------------------------------------------------------
+
+/* --- HIGHEST TICKET CONCENTRATION (PROJECT ID) ---
+Identifies the specific Project ID that accounts for the largest share of currently active support tickets. Logic: Creates a virtual table that calculates the ratio of active tickets per project against the total active ticket pool, ranks them to find the top performer (or "top offender"), and returns the ID. This metric is essential for root-cause analysis, allowing teams to pinpoint which projects are placing the highest strain on support resources.
+*/
+
+Highest Ticket Concentration (Project_ID) = 
+VAR projectActiveTicketRateTable = 
+    ADDCOLUMNS(
+        VALUES(SupportTickets[Project ID]), 
+        "Active Tickets Rate",
+        VAR activeTicketsCnt = 
+            CALCULATE(
+                DISTINCTCOUNT(SupportTickets[Ticket ID]),
+                SupportTickets[Status] IN {"Open", "In Progress"}
+            )
+        VAR totalActiveTicketsCnt = 
+            CALCULATE(
+                DISTINCTCOUNT(SupportTickets[Ticket ID]),
+                SupportTickets[Status] IN {"Open", "In Progress"},
+                ALL(SupportTickets)
+            )
+        RETURN
+            DIVIDE(activeTicketsCnt, totalActiveTicketsCnt, 0)
+    )
+
+VAR topRateRow = TOPN(1, projectActiveTicketRateTable, [Active Tickets Rate], DESC)
+
+RETURN
+    -- Use MAXX to extract the value from the 1-row virtual table
+    MAXX(topRateRow, [Project ID])
