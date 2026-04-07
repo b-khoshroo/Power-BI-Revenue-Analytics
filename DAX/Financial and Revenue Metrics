@@ -1,0 +1,101 @@
+
+/* --- YTD REVENUE ---
+Calculates the cumulative total revenue from the beginning of the current fiscal year up to the latest date in the filtered context. Logic: Utilizes the TOTALYTD time-intelligence function to automatically reset the aggregation at the start of each calendar year. This metric is essential for tracking annual performance against seasonal targets.
+*/
+
+YTD Revenue = TOTALYTD(SUM(ProjectSales[Revenue]), ProjectSales[Date]) 
+
+---------------------------------------------------------------------------------------------
+
+/* --- CUMULATIVE PROJECT COST (RUNNING TOTAL) ---
+Calculates a temporal running total of project expenditures by capturing the maximum date in the current context and aggregating all costs from the beginning of the dataset up to that point. 
+*/
+
+Cumulative Project Cost (Running Total) = 
+    VAR currentDate = MAX(ProjectSales[Date])
+RETURN
+    CALCULATE(SUM(ProjectSales[Cost]), FILTER(ALL(ProjectSales), ProjectSales[Date] <= currentDate))
+
+-----------------------------------------------------------------------------------------
+
+/* --- TARGET GAP ---
+Calculates the remaining distance to a fixed revenue milestone of $1,000,000. Logic: Compares the sum of project revenue against the target; if the target is exceeded, it returns 0, otherwise it calculates the variance. This performance metric is used to track progress toward fiscal goals and prioritize sales efforts.
+*/
+
+Target Gap = 
+ VAR target = 1000000
+ RETURN
+    IF(SUM(ProjectSales[Revenue]) > target, 0 , target - SUM(ProjectSales[Revenue]))
+
+--------------------------------------------------------------------------------------------
+
+/* --- PROJECT PROFIT MARGIN % ---
+Calculates the overall financial efficiency of projects by dividing total profit by total revenue. This fundamental profitability metric is used to evaluate the health of the project portfolio and ensure that operational margins remain aligned with organizational targets.
+*/
+
+Project Profit Margin % = 
+    DIVIDE(SUM(ProjectSales[Profit]), SUM(ProjectSales[Revenue]), 0)
+
+------------------------------------------------------------------------------------------
+
+/* --- AVERAGE REVENUE PER PROJECT ---
+Calculates the mean revenue generated per project by dividing the total aggregated revenue by the distinct count of Project IDs. This efficiency metric is used to assess project-level profitability and helps leadership identify high-value project categories within the portfolio.
+*/
+
+Average Revenue Per Project = 
+VAR totalRevenue = SUM(ProjectSales[Revenue])
+VAR projectsCnt = DISTINCTCOUNT(ProjectSales[Project ID])
+RETURN
+    DIVIDE(totalRevenue, projectsCnt, 0)
+
+-----------------------------------------------------------------------------------------
+
+/* --- AVERAGE REVENUE PER CUSTOMER (ARPC) ---
+Calculates the mean revenue generated per unique customer across the ProjectSales dataset. Logic: Aggregates total revenue and divides by the distinct count of Customer IDs.
+*/
+
+Average Revenue per Customer (ARPC) = 
+    VAR totalRevenue = SUM(ProjectSales[Revenue])
+    VAR totalCustomers = DISTINCTCOUNT(ProjectSales[Customer ID])
+RETURN
+    DIVIDE(totalRevenue, totalCustomers, 0)
+
+-----------------------------------------------------------------------------------------
+
+/* --- AVERAGE COST PER CUSTOMER ---
+Calculates the mean expenditure incurred per unique customer across the ProjectSales dataset. Logic: Aggregates total costs and divides by a distinct count of Customer IDs. This financial efficiency metric is essential for analyzing Customer Acquisition Cost (CAC) and overall profitability per account.
+*/
+
+Average Cost Per Customer = 
+    VAR totalCost = SUM(ProjectSales[Cost])
+    VAR customersCnt = DISTINCTCOUNT(ProjectSales[Customer ID])
+RETURN
+    DIVIDE(totalCost, customersCnt, 0)
+
+----------------------------------------------------------------------------------------
+
+/* --- REVENUE PER PROJECT DAY ---
+Calculates the average daily revenue generated across the entire project lifecycle. Logic: Aggregates total revenue and divides it by the total span of days between the earliest project start date and the latest project end date. This efficiency metric allows for "normalization" of revenue, helping you compare the profitability of long-term vs. short-term projects regardless of their total contract value.
+*/
+
+Revenue Per Project Day = 
+ VAR totalRevenue = SUM(ProjectSales[Revenue])
+ VAR firstDay = MIN(Projects[Start Date])
+ VAR lastDay = MAX(Projects[End Date])
+ VAR totalDays = DATEDIFF(firstDay, lastDay, DAY)
+ RETURN
+    DIVIDE(totalRevenue, totalDays, 0) 
+
+------------------------------------------------------------------------------------------
+
+/* --- TOP CLIENT REVENUE % ---
+Calculates the revenue concentration of the single largest customer relative to the total portfolio. Logic: Creates a virtual table to aggregate revenue per Customer ID, extracts the maximum value using MAXX, and divides it by the total global revenue. This risk management metric identifies "key client" dependency and potential revenue vulnerability.
+*/
+
+Top Client Revenue % = 
+VAR clientsRevenueTable = ADDCOLUMNS(VALUES(ProjectSales[Customer ID]), "Revenue", SUM(ProjectSales[Revenue]))
+RETURN  
+    DIVIDE(MAXX(clientsRevenueTable, [Revenue]), SUM(ProjectSales[Revenue]), 0) 
+
+
+
