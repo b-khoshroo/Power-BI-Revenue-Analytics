@@ -28,10 +28,14 @@ The project features 26 sophisticated measures categorized by business function:
 ## Key Visualizations & Insights
 ### Executive Financial Health
 * <b>Insight</b>: Real-time tracking of YTD Revenue and Profit Margins allows for immediate assessment of fiscal health against a target milestone.
+![Executive Financial Health](<Visuals/Executive Financial Health.png>)
 ### SaaS Revenue Momentum
 * <b>Insight</b>: The Total Actual MRR Growth visual identifies critical inflection points in subscription momentum, providing a deeper look into revenue velocity beyond static totals.
+![SaaS Revenue Momentum](<Visuals/SaaS Revenue Momentum.png>)
 ### Historical Revenue Context
 * <b>Insight</b>: By visualizing Actual MRR Prior Month, the model provides a 5-year historical baseline to validate growth trends and seasonal performance.
+
+![Historical Revenue Context](<Visuals/Historical Revenue Context.png>)
 <br></br>
 ## Governance & Scalability
 To ensure long-term viability, the project implements:
