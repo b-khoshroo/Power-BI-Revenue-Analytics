@@ -15,6 +15,8 @@ The model is built on a <b>Star Schema</b> architecture:
 * <b>Fact Tables</b>: ProjectSales, SubscriptionRevenue, and SupportTickets.
 * <b>Dimension Tables</b>: Customer, Employee, Office, and Date.
 * <b>Relationship Integrity</b>: Utilized bridge tables (e.g., BridgeEmployeeProject) and bi-directional filters where necessary to capture complex many-to-many relationships.
+  
+![Data Model](<Visuals/Data Model.png>)
 
 ### 3. DAX Analytics Library
 The project features 26 sophisticated measures categorized by business function:
