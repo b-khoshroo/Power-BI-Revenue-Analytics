@@ -1,6 +1,6 @@
-# <p align = "center"> Power-BI-Revenue-Analytics</p>
+# <p align = "center"> Power BI Revenue Analytics</p>
 
-## Project Overview
+## Project Overview 
 This repository contains an end-to-end Power BI business intelligence solution designed to analyze revenue streams, project profitability, and operational support efficiency. The project transitions raw, fragmented data into a structured <b>Star Schema</b> model, powered by a library of <b>26 custom DAX measures</b> to drive executive decision-making.
 <br></br>
 ## Technical Workflow
